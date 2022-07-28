@@ -6,6 +6,7 @@ import knex from "./db"
 
 
 const app = express();
+let a = 'test';
 
 
 interface Author {
@@ -72,6 +73,7 @@ interface Book{
             resolve: ({id}) => {
                 // return books.filter((book) => book.authorId === id)
                 let books = knex<Book>('books').select().where('authorId', id)
+                console.log("books")
                 return books;
 
             }
