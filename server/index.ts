@@ -3,9 +3,12 @@ import "dotenv/config"
 import { graphqlHTTP } from "express-graphql";
 import { GraphQLSchema, GraphQLObjectType, GraphQLString, GraphQLNonNull, GraphQLID, GraphQLInt, GraphQLList, GraphQLScalarType } from "graphql";
 import knex from "./db"
+import axios from "axios";
+import DataLoader from "dataloader";
 
 
 const app = express();
+let a = 'test';
 
 
 interface Author {
@@ -14,6 +17,7 @@ interface Author {
     country: string,
     created_at? : any,
     updated_at? : any,
+    books: Book[]
 }
 
 interface Book{
@@ -60,6 +64,16 @@ interface Book{
 //     }
 // ]
 
+const bookLoader = new DataLoader<number, any>((ids) => {
+    return knex.table('authors')
+});
+
+
+
+const booksofauthors = () => {
+
+}
+
 
   const AuthorType = new GraphQLObjectType({
     name: "Author",
@@ -72,12 +86,17 @@ interface Book{
             resolve: ({id}) => {
                 // return books.filter((book) => book.authorId === id)
                 let books = knex<Book>('books').select().where('authorId', id)
+                console.log("request with author id: " + id)
                 return books;
 
             }
         }
     })
   })
+
+  async function batchFunction(keys: number[]) {
+    const authors = await knex<Author>('authors').select()
+  }
 
   const BookType = new GraphQLObjectType({
     name: "Book",
@@ -119,6 +138,7 @@ interface Book{
             resolve: async (_, {name}) => {
                 // return books.find((book) => (id === book.id) || (name === book.bookName))
                 let book = await knex<Book>('books').select().where("bookName", name)
+                
                 return book[0]
             }
         }, 
@@ -128,6 +148,7 @@ interface Book{
             description: "get a list of books",
             resolve: async () => {
                 let books = await knex<Book>('books').select()
+                
                 return books 
             }
         }
@@ -191,6 +212,17 @@ interface Book{
     })
   );
 
+  let token = "ZXlKaGJHY2lPaUpJVXpJMU5pSXNJblI1Y0NJNklrcFhWQ0o5LmV5SjFjMlZ5WDJsa0lqb3lNakk1TENKMGVYQmxJam9pWVhWMGFDSXNJbWxoZENJNk1UWTFPRFF3TWpjeE5Dd2laWGh3SWpveE5qWXdPVGswTnpFMGZRLnJlUVRDdlhlQ0xnZ3lNYWJSdFRfZDQwdTExeXUxdGRTM29oRnZEdF9wUWs="
+  app.get("/api", (req, res) => {
+        axios({
+            method: "GET",
+            url: "https://api.lightfunnels.com/graphql",
+            headers: {
+                "authorization": "Bearer " + token,
+                "Content-Type": "application/json"
+            }
+        }).then(d => console.log(d))
+  })
   app.get("/", (req, res) => {
     res.redirect("/graphql")
   })
